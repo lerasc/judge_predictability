@@ -1,0 +1,17 @@
+name: judge_prediction
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - seaborn
+  - xgboost
+  - statsmodels
+  - tqdm
+  - matplotlib
+  - joblib
+  - scikit-learn
+  - scipy
+  - shap
