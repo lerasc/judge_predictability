@@ -31,13 +31,11 @@ def get_project_folder( subfolder=None, create=True ):
 	:return folder:     path to folder
 	"""
 
-	# hard-code folders to git repo
+	# hard-code the folder to this git repo
 	####################################################################################################################
-	f1 = '/Users/sandro/Documents/research/research projects/litigation/judge analysis/code/'
-	f2 = '/work/aais-ler/judge_predictability/'
+	f = 'add/path/to/this/repo/here'
 
-	if    os.path.exists(f1): folder = f1
-	elif  os.path.exists(f2): folder = f2
+	if  os.path.exists(f): folder = f
 	else: raise ValueError('unknown root folder ')
 
 	# add subfolder and check if it exists, if not, create it
