@@ -257,23 +257,18 @@ def visualize_citation_feature_classification_results( ):
     probas          =   cite_df.sum(axis=1)
     some_judges     =   np.random.choice( judges, size=20, p=probas/probas.sum()  )
     cite_df         =   cite_df.loc[ some_judges, : ]
-    cite_df.index   = [ f'judge ID {i}' for i in cite_df.index ]  
+    cite_df.index   = [ f'judge ID {str(i).zfill(4)}' for i in cite_df.index ]  
     cite_df.columns = [ c.split('cite_count_case_')[1].zfill(7) for c in cite_df.columns ] 
     cite_df.columns = [ f'case nr. {c}' for c in cite_df.columns ]          
 
-    # Calculate a non-negative matrix factorization. Just like described in [1], here we first subsample data per case 
-    # to make sure the embedding is representative across case types. 
-    # [1] 2021 - Yang et al. - Identifying latent activity behaviors and lifestyles.
+    # Calculate a 3-dimensional non-negative matrix factorization.
     ####################################################################################################################
-    X          = df.groupby('case_type').sample(10**3, replace=True)           # like in [1]
-    X          = X.loc[ :, cite_cols ]                                         # restrict to relevant cases
-    nc         = 3                                                             # embedding dimension
-    model      = NMF( n_components=nc, init='random',                          # intiialize class
-                      random_state=0, max_iter=2000 )                          
-    _          = model.fit(X)                                                  # X ~ W*H
-    W          = model.transform( X )                                          # transform
-    H          = model.components_
-    H          = pd.DataFrame(H, index=range(1,nc+1) )        
+    nc     = 3                                                                    # embedding dimension
+    cols   = [f'emb. dim {i}' for i in range(nc)]                                 # nice column names
+    model  = NMF( n_components=nc, init='random', random_state=0, max_iter=2000 ) # initialize class
+    _      = model.fit( cite_df )                                                 # X ~ W*H
+    W      = model.transform( cite_df )                                           # transform
+    W      = pd.DataFrame( W, index=cite_df.index, columns=cols )                 # make df
 
     # Load the NMF based classification results.
     ####################################################################################################################
@@ -284,20 +279,20 @@ def visualize_citation_feature_classification_results( ):
     height         = 8
     width          = 22
     fig            = plt.figure(figsize=(width, height))
-    gs             = plt.GridSpec( nrows=20, ncols=2,  )
+    gs             = plt.GridSpec( nrows=10, ncols=25,  )
     _              = fig.subplots_adjust( hspace=0.7, wspace=0.13 )
     fs             = 13
     axs            = []    
 
     # Plot heatmap of cited cases.
     ####################################################################################################################
-    ax              = fig.add_subplot( gs[:13,0] )
+    ax              = fig.add_subplot( gs[:,:12] )
     axs            += [ax]
     vmax            =   0.03
     ticks           = [ 0,    0.01,  0.02,  0.03  ]
     labels          = ['0%',  '1%',  '2%',  '3%'  ]
     _               = sb.heatmap(cite_df,  cmap='flare',  ax=ax,  vmax=vmax, 
-                                    cbar_kws={'extend':'max', 'location': 'top' }
+                                    cbar_kws={'extend':'max', 'location': 'top', 'shrink':0.5 }
                                     )
     _               = ax.figure.axes[-1].set_xlabel('relative citation count', size=fs)    
     c_bar           = ax.collections[0].colorbar
@@ -306,24 +301,25 @@ def visualize_citation_feature_classification_results( ):
 
     # Plot heatmap of NMF embedding.
     ####################################################################################################################
-    ax       = fig.add_subplot( gs[17:,0] )
+    ax       = fig.add_subplot( gs[:,12:15] )
     axs     += [ax]
     fs       = 14
     vmax     =  0.05
     ticks    = [ 0,    0.01,  0.02,  0.03,  0.04, 0.05 ]
     labels   = ['0%',  '1%',  '2%',  '3%',  '4%', '5%' ]
-    _        = sb.heatmap(H, cmap='Blues', ax=ax, vmax=vmax, cbar_kws={'extend':'max','location':'bottom','shrink':0.5})
-    _        = ax.figure.axes[-1].set_xlabel('weight', size=fs)    
-    c_bar    = ax.collections[0].colorbar
-    _        = c_bar.set_ticks(ticks)
-    _        = c_bar.set_ticklabels(labels)   
-    _        = ax.set_ylabel('embedding\ndimension', fontsize=fs)
-    _        = ax.set_xlabel('')    
-    _        = ax.set_xticks([])
+
+    _               = sb.heatmap(W,  cmap='Blues',  ax=ax,  vmax=vmax, 
+                                    cbar_kws={'extend':'max', 'location': 'top' }
+                                    )
+    _               = ax.set_yticklabels([])
+    _               = ax.figure.axes[-1].set_xlabel('weight', size=fs)    
+    c_bar           = ax.collections[0].colorbar
+    _               = c_bar.set_ticks(ticks)
+    _               = c_bar.set_ticklabels(labels)  
 
     # Plot the accuracy for NMF features.
     ####################################################################################################################
-    ax      =  fig.add_subplot( gs[:,1] )
+    ax      =  fig.add_subplot( gs[2:,16:] )
     _       =  visualize_accuracy_per_signal_strength( df=clfs, ax=ax, legend_outside=False )
     _       =  ax.set_title('')
     axs    += [ax]          
