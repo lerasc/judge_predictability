@@ -255,7 +255,7 @@ def visualize_citation_feature_classification_results( ):
     ####################################################################################################################
     judges          =   cite_df.index
     probas          =   cite_df.sum(axis=1)
-    some_judges     =   np.random.choice( judges, size=20, p=probas/probas.sum()  )
+    some_judges     =   np.random.choice( judges, size=20, p=probas/probas.sum(), replace=False  )
     cite_df         =   cite_df.loc[ some_judges, : ]
     cite_df.index   = [ f'judge ID {str(i).zfill(4)}' for i in cite_df.index ]  
     cite_df.columns = [ c.split('cite_count_case_')[1].zfill(7) for c in cite_df.columns ] 
@@ -304,9 +304,9 @@ def visualize_citation_feature_classification_results( ):
     ax       = fig.add_subplot( gs[:,12:15] )
     axs     += [ax]
     fs       = 14
-    vmax     =  0.05
-    ticks    = [ 0,    0.01,  0.02,  0.03,  0.04, 0.05 ]
-    labels   = ['0%',  '1%',  '2%',  '3%',  '4%', '5%' ]
+    vmax     =  0.04
+    ticks    = [ 0,    0.01,  0.02,  0.03,  0.04 ]
+    labels   = ['0%',  '1%',  '2%',  '3%',  '4%' ]
 
     _               = sb.heatmap(W,  cmap='Blues',  ax=ax,  vmax=vmax, 
                                     cbar_kws={'extend':'max', 'location': 'top' }
